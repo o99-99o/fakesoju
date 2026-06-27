@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<title>주민등록증 모바일 확인서비스</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#e4ebf3;font-family: sans-serif;-webkit-text-size-adjust:none}
+.header{display:flex;align-items:center;justify-content:space-between;padding:10px 15px;background:#fff;border-bottom:1px solid #ddeaf3}
+.header h2{font-size:16px;color:#333}
+.header_list svg{width:30px;height:30px}
+#wrap{padding:20px}
+#box{background:#fff;border-radius:15px;border:1px solid #ccc;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.1);position:relative}
+#box.box_main{text-align:center}
+.photo-wrap{width:120px;height:160px;margin:0 auto 15px;overflow:hidden;border-radius:5px;background:#f0f0f0}
+.photo-wrap img{width:100%;height:100%;object-fit:cover}
+#box h1{font-size:22px;color:#2c2b2b;margin-bottom:5px;padding:2px 5px;border:1px dashed transparent}
+#box h2{font-size:16px;color:#2c2b2b;margin-bottom:5px;padding:2px 5px;border:1px dashed transparent}
+#box h3{font-size:14px;color:#555;margin-bottom:15px;padding:2px 5px;border:1px dashed transparent}
+#box h1:focus,#box h2:focus,#box h3:focus,#box h4:focus,#box h5:focus{border-color:#065bc6;outline:none;background:#f0f7ff;border-radius:3px}
+.QR_Code{margin:10px auto}
+.QR_Code img{width:200px;height:200px;display:block;margin:0 auto}
+progress{width:80%;height:8px;display:block;margin:10px auto}
+.progressbar_text{font-size:14px;color:#555;margin-top:5px}
+.progressbar_time{font-size:30px;color:#065bc6;margin-top:-5px}
+.QR_text{font-size:14px;color:#ccc;margin-top:5px}
+.box_footer{background:#065bc6;border-radius:0 0 15px 15px;padding:12px;margin:20px -20px -20px;cursor:pointer}
+.box_footer p{color:#fff;text-align:center;font-size:14px}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:999;padding:20px}
+.modal #box{min-height:300px}
+.modal h1,.modal h2,.modal h3,.modal h4,.modal h5{text-align:left;color:#2c2b2b;margin-bottom:5px;padding:2px 5px;border:1px dashed transparent}
+.modal h4,.modal h5{font-size:13px;color:#555}
+.back{position:absolute;bottom:-40px;left:50%;transform:translateX(-50%);width:36px;height:36px;background:#fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;cursor:pointer}
+#footer{text-align:center;padding:10px;color:#fff}
+#footer marquee p{font-size:12px;color:#999}
+[contenteditable=true]:hover{cursor:text;background:#f5f5f5;border-radius:3px}
+@media(max-width:480px){
+  #wrap{padding:10px}
+  .photo-wrap{width:100px;height:130px}
+  .QR_Code img{width:150px;height:150px}
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div style="display:flex;align-items:center;gap:8px">
+    <svg width="17" height="18" viewBox="0 0 17 17"><path d="M4 9L14 17V1Z" fill="black"/></svg>
+    <h2>정부24</h2>
+  </div>
+  <h2>주민등록증 모바일 확인서비스</h2>
+  <div class="header_list"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/></svg></div>
+</div>
+<div id="wrap">
+  <div id="box" class="box_main">
+    <div class="photo-wrap"><img src="https://picsum.photos/300/400"></div>
+    <h1 contenteditable="true" id="edit_name">이름</h1>
+    <h2 contenteditable="true" id="edit_jumin">주민.번호.</h2>
+    <h3 contenteditable="true" id="edit_addr">주소</h3>
+    <div class="QR_Code"><img id="QR_img" src="https://quickchart.io/qr?size=400&text=init"></div>
+    <progress value="0" max="30" id="jb"></progress>
+    <p class="progressbar_text">남은시간</p>
+    <p class="progressbar_time" id="timerDisplay">30초</p>
+    <p class="QR_text">QR코드를 리더기에 스캔하세요</p>
+    <div class="box_footer"><p class="js-click-modal">상세정보 표시</p></div>
+  </div>
+  <div class="modal" style="display:none">
+    <div id="box">
+      <div class="photo-wrap"><img src="https://picsum.photos/300/400"></div>
+      <h1 contenteditable="true" id="edit_name2">이름</h1>
+      <h2 contenteditable="true" id="edit_jumin2">주민번호</h2>
+      <h3 contenteditable="true" id="edit_addr2">주소</h3>
+      <h4 contenteditable="true" id="edit_date">일자</h4>
+      <h5 contenteditable="true" id="edit_region">지역</h5>
+    </div>
+    <div class="back"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/></svg></div>
+  </div>
+  <div id="footer">
+    <marquee><p>캡쳐방지 시스템이 작동 중입니다. 캡쳐방지 시스템이 작동 중입니다.</p></marquee>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  // Modal toggle
+  document.querySelector('.js-click-modal').addEventListener('click',function(){
+    document.querySelector('.box_main').style.display='none';
+    document.querySelector('.modal').style.display='block';
+  });
+  document.querySelector('.back').addEventListener('click',function(){
+    document.querySelector('.box_main').style.display='block';
+    document.querySelector('.modal').style.display='none';
+  });
+  
+  // Auto-save contenteditable
+  document.querySelectorAll('[contenteditable]').forEach(function(el){
+    el.addEventListener('blur',function(){localStorage.setItem(this.id,this.innerText)});
+    var saved=localStorage.getItem(el.id);
+    if(saved) el.innerText=saved;
+  });
+  
+  // QR rotation every 30s
+  var count=30;
+  var chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  setInterval(function(){
+    count--;
+    document.querySelector('.progressbar_time').textContent=count+'초';
+    document.querySelector('#jb').value=count;
+    if(count<=0){
+      var r='';
+      for(var i=0;i<54;i++) r+=chars.charAt(Math.floor(Math.random()*chars.length));
+      document.querySelector('#QR_img').src='https://quickchart.io/qr?size=400&text='+r;
+      count=30;
+    }
+  },1000);
+});
+</script>
+</body>
+</html>
